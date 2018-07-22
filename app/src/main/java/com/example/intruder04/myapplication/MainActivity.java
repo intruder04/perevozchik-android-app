@@ -24,13 +24,18 @@ import com.android.volley.RequestQueue;
 import com.android.volley.Response;
 import com.android.volley.VolleyError;
 import com.android.volley.toolbox.JsonObjectRequest;
+import com.android.volley.toolbox.StringRequest;
 import com.android.volley.toolbox.Volley;
 
 import org.json.JSONObject;
 
+import java.util.HashMap;
+import java.util.Map;
 
 
 public class MainActivity extends AppCompatActivity {
+
+    private String serverUrl = "http://194.87.102.102:3003/api/";
 
     private Button startButton;
     private Button stopButton;
@@ -207,8 +212,9 @@ public class MainActivity extends AppCompatActivity {
                         locationManager.removeUpdates(locationListener);
                         distanceView.setText("\n FINAL DISTANCE: " + meterCounter);
                         getWindow().clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
-                        request();
-                        sendEmail(meterCounter);
+//                        requestGet();
+//                        sendEmail(meterCounter);
+                        requestPost(meterCounter);
                     }
 //                    locationManager = null;
                 }
@@ -220,30 +226,62 @@ public class MainActivity extends AppCompatActivity {
         });
     }
 
-    private void request() {
-        final String url = "http://httpbin.org/get?param1=hello";
-
+    private void requestGet() {
         // prepare the Request
-                JsonObjectRequest getRequest = new JsonObjectRequest(Request.Method.GET, url, null,
-                        new Response.Listener<JSONObject>()
-                        {
-                            @Override
-                            public void onResponse(JSONObject response) {
-                                // display response
-                                Log.d("Response", response.toString());
-                            }
-                        },
-                        new Response.ErrorListener()
-                        {
-                            @Override
-                            public void onErrorResponse(VolleyError error) {
-                                Log.d("Error.Response", error.toString());
-                            }
-                        }
-                );
+        JsonObjectRequest getRequest = new JsonObjectRequest(Request.Method.GET, serverUrl, null,
+                new Response.Listener<JSONObject>()
+                {
+                    @Override
+                    public void onResponse(JSONObject response) {
+                        // display response
+                        Log.d("Response", response.toString());
+                    }
+                },
+                new Response.ErrorListener()
+                {
+                    @Override
+                    public void onErrorResponse(VolleyError error) {
+                        Log.d("Error.Response", error.toString());
+                    }
+                }
+        );
 
         // add it to the RequestQueue
-                queue.add(getRequest);
+        queue.add(getRequest);
+
+    }
+
+    private void requestPost(double MeterCounter) {
+        final double param = MeterCounter;
+        StringRequest postRequest = new StringRequest(Request.Method.POST, serverUrl + "events/",
+                new Response.Listener<String>()
+                {
+                    @Override
+                    public void onResponse(String response) {
+                        // response
+                        Log.d("Response", response);
+                    }
+                },
+                new Response.ErrorListener()
+                {
+                    @Override
+                    public void onErrorResponse(VolleyError error) {
+                        // error
+                        Log.d("Error.Response", error.toString());
+                    }
+                }
+        ) {
+            @Override
+            protected Map<String, String> getParams()
+            {
+                Map<String, String> params = new HashMap<String, String>();
+                params.put("driver", "driver name");
+                params.put("meters", "DIST:" + param);
+
+                return params;
+            }
+        };
+        queue.add(postRequest);
 
     }
 
